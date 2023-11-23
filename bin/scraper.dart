@@ -5,7 +5,8 @@ import 'package:html/dom.dart';
 void main() async {
   var url = Uri.parse('https://en.wikipedia.org/wiki/List_of_car_brands');
 
-  var country = 'United States';
+  //Test country to grab
+  var country = 'Vietnam';
 
   //Left of implementing only pulling by selected country
 
@@ -15,28 +16,52 @@ void main() async {
     if (response.statusCode == 200) {
       var document = parser.parse(response.body);
 
+      //Select all h3 tags from the page. (active brands is currently always h3)
       var activeBrandElements = document.querySelectorAll('h3');
 
+      //If query successful, grab all the h3 text
       if (activeBrandElements.isNotEmpty) {
         for (var activeBrandElement in activeBrandElements) {
           var activeBrandText = activeBrandElement.text;
 
+          //Check if h3 contains 'Active brands' label then grab all the h2's (country tags are h2's)
           if (activeBrandText.contains('Active brands')) {
-            var ulElement = activeBrandElement.nextElementSibling;
+            var h2Element = activeBrandElement.previousElementSibling;
 
-            while (ulElement != null && ulElement.localName != 'ul') {
-              ulElement = ulElement.nextElementSibling;
+            //iterate until found h2 tag above active brands label
+            while (h2Element != null && h2Element.localName != 'h2') {
+              h2Element = h2Element.previousElementSibling;
             }
 
-            if (ulElement != null) {
-              var liElements = ulElement.querySelectorAll('li');
+            //Check if found h2 and query for spans (all country text are within spans)
+            if (h2Element != null) {
+              var spanElement = h2Element.querySelector('span');
 
-              for (var liElement in liElements) {
-                var linkElement = liElement.querySelector('a');
+              //Countinue grabbing from unordered list if span tag above matches country
+              if (spanElement != null && spanElement.text == country) {
+                print(spanElement.text);
 
-                if (linkElement != null) {
-                  var text = linkElement.text;
-                  print('Make: $text');
+                var ulElement = activeBrandElement.nextElementSibling;
+
+                //due to layout, some lists are in divs while others are not. filter here
+                while (ulElement != null &&
+                    ulElement.localName != 'div' &&
+                    ulElement.localName != 'ul') {
+                  ulElement = ulElement.nextElementSibling;
+                }
+
+                //Grab all list elements from below the active brands tag for the searched country
+                if (ulElement != null) {
+                  var liElements = ulElement.querySelectorAll('li');
+
+                  for (var liElement in liElements) {
+                    var linkElement = liElement.querySelector('a');
+
+                    if (linkElement != null) {
+                      var text = linkElement.text;
+                      print('Make: $text');
+                    }
+                  }
                 }
               }
             }
