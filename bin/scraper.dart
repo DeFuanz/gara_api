@@ -1,12 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
-import 'package:html/dom.dart';
+
 
 void main() async {
   var url = Uri.parse('https://en.wikipedia.org/wiki/List_of_car_brands');
 
-  //Test country to grab
-  var country = 'Vietnam';
+  Map<String, List<String>> carBrands = {};
 
   //Left of implementing only pulling by selected country
 
@@ -38,7 +37,8 @@ void main() async {
               var spanElement = h2Element.querySelector('span');
 
               //Countinue grabbing from unordered list if span tag above matches country
-              if (spanElement != null && spanElement.text == country) {
+              if (spanElement != null) {
+                carBrands[spanElement.text] = [];
                 print(spanElement.text);
 
                 var ulElement = activeBrandElement.nextElementSibling;
@@ -59,6 +59,7 @@ void main() async {
 
                     if (linkElement != null) {
                       var text = linkElement.text;
+                      carBrands[spanElement.text]!.add(text);
                       print('Make: $text');
                     }
                   }
@@ -76,4 +77,8 @@ void main() async {
   } catch (e) {
     print('Error: $e');
   }
+
+  carBrands.forEach((key, value) {
+    print('$key: $value');
+  });
 }
