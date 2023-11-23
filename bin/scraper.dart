@@ -1,11 +1,13 @@
+import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
 
-
 void main() async {
-  var url = Uri.parse('https://en.wikipedia.org/wiki/List_of_car_brands');
+  var url = Uri.parse('https://www.carmodelslist.com/car-manufacturers/');
 
   Map<String, List<String>> carBrands = {};
+
+  var brand = 'Chevrolet';
 
   //Left of implementing only pulling by selected country
 
@@ -15,61 +17,27 @@ void main() async {
     if (response.statusCode == 200) {
       var document = parser.parse(response.body);
 
-      //Select all h3 tags from the page. (active brands is currently always h3)
-      var activeBrandElements = document.querySelectorAll('h3');
+      var brandElements =
+          document.querySelectorAll('[title="$brand Car Models List"]');
 
-      //If query successful, grab all the h3 text
-      if (activeBrandElements.isNotEmpty) {
-        for (var activeBrandElement in activeBrandElements) {
-          var activeBrandText = activeBrandElement.text;
+      if (brandElements.isNotEmpty) {
+        var brandElement = brandElements.first;
+        print(brandElement.attributes['href']);
 
-          //Check if h3 contains 'Active brands' label then grab all the h2's (country tags are h2's)
-          if (activeBrandText.contains('Active brands')) {
-            var h2Element = activeBrandElement.previousElementSibling;
+        var brandUrl = brandElement.attributes['href'];
+        var brandResponse = await http.get(Uri.parse(brandUrl!));
 
-            //iterate until found h2 tag above active brands label
-            while (h2Element != null && h2Element.localName != 'h2') {
-              h2Element = h2Element.previousElementSibling;
-            }
+        if (brandResponse.statusCode == 200) {
+          var brandDocument = parser.parse(brandResponse.body);
 
-            //Check if found h2 and query for spans (all country text are within spans)
-            if (h2Element != null) {
-              var spanElement = h2Element.querySelector('span');
+          var listItems = brandDocument.querySelectorAll('li');
 
-              //Countinue grabbing from unordered list if span tag above matches country
-              if (spanElement != null) {
-                carBrands[spanElement.text] = [];
-                print(spanElement.text);
+          List<Element> filteredItems = listItems.where((item) {
+            return item.text.contains(brand);
+          }).toList();
 
-                var ulElement = activeBrandElement.nextElementSibling;
-
-                //due to layout, some lists are in divs while others are not. filter here
-                while (ulElement != null &&
-                    ulElement.localName != 'div' &&
-                    ulElement.localName != 'ul') {
-                  ulElement = ulElement.nextElementSibling;
-                }
-
-                //Grab all list elements from below the active brands tag for the searched country
-                if (ulElement != null) {
-                  var liElements = ulElement.querySelectorAll('li');
-
-                  for (var liElement in liElements) {
-                    var linkElement = liElement.querySelector('a');
-
-                    if (linkElement != null) {
-                      var text = linkElement.text;
-                      carBrands[spanElement.text]!.add(text);
-                      print('Make: $text');
-                    }
-                  }
-                }
-              }
-            }
-          }
+          print(filteredItems.first.text);
         }
-      } else {
-        print('Elements not found');
       }
     } else {
       print('Error: ${response.statusCode}');
