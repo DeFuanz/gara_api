@@ -1,5 +1,5 @@
-<h1>About Gara API</h1>
-A custom API that allows Gara () to pull a list of makes and models from scraping the web and return it to the app for users to select their vehicles from a pre-defined list.
+<h1>About Gara WebScraper</h1>
+A custom WebScraper that allows Gara () to pull a list of makes and models from scraping the web and return it to the app for users to select their vehicles from a pre-defined list.
 
 It currently pulls from https://en.wikipedia.org/wiki/List_of_car_brands
 
